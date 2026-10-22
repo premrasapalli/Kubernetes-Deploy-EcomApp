@@ -991,3 +991,126 @@ PREVENTION:
 **Day 2 PASSED** — despite the image pull issue, all enterprise patterns
 worked as designed. The failure actually validated the zero-downtime
 architecture.
+
+---
+
+## Issue #7: Cilium Install Failed — ServiceMonitor CRD Missing (Day 3)
+
+**Date**: Day 3 — Networking (Cilium 1.20 + Gateway API)
+**Environment**: macOS · EKS 1.36 (`enterprise-eks`) · Helm v3
+**Component**: `cilium` Helm release (namespace `kube-system`)
+
+### Symptom
+
+`helm install cilium cilium/cilium --version 1.20.2 -n kube-system -f cilium-values.yaml` failed with:
+
+```
+Error: INSTALLATION FAILED: unable to build kubernetes objects from release manifest:
+resource mapping not found for name: "cilium-agent" namespace: "kube-system" from "":
+no matches for kind "ServiceMonitor" in version "monitoring.coreos.com/v1"
+ensure CRDs are installed first
+```
+
+Before that, setting `trustCRDsExist: true` produced a similar error:
+
+```
+Error: INSTALLATION FAILED: execution error at (cilium/templates/validate.yaml:79:13):
+Service Monitor requires monitoring.coreos.com/v1 CRDs.
+```
+
+### Root cause
+
+1. **`cilium-values.yaml` has `prometheus.serviceMonitor.enabled: true`** →
+   Cilium's Helm chart generates a `ServiceMonitor` resource in its
+   manifest.
+2. **Prometheus Operator CRDs are not installed in the EKS cluster** → the
+   API server does not know the `monitoring.coreos.com/v1` API group.
+3. **`trustCRDsExist: true` did not help** because that flag only skips
+   validation at Helm **template-rendering** time. When Helm finally sends
+   the manifest to the API server, server-side validation still rejects the
+   unknown kind — that part cannot be bypassed.
+
+### Resolution — Option A (recommended): install the Prometheus Operator CRD
+
+```bash
+# Step 1: install the ServiceMonitor CRD (server-side apply mandatory)
+kubectl apply --server-side -f \
+  https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+
+# Step 2: confirm the CRD exists
+kubectl get crds | grep servicemonitors
+# Expected: servicemonitors.monitoring.coreos.com
+
+# Step 3: retry the Cilium install
+helm install cilium cilium/cilium \
+  --version 1.20.2 \
+  --namespace kube-system \
+  --values cilium-values.yaml
+```
+
+Why `--server-side`? The CRD manifest is too large
+(`metadata.annotations` > 262KB), so a normal `kubectl apply` fails with
+`Too long: must have at most 262144 bytes`. `--server-side` bypasses that
+client-side limit.
+
+### Resolution — Option B (temporary): disable ServiceMonitor
+
+```yaml
+# in cilium-values.yaml
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: false    # true → false
+```
+
+```bash
+helm install cilium cilium/cilium \
+  --version 1.20.2 \
+  --namespace kube-system \
+  --values cilium-values.yaml
+```
+
+Trade-off: Cilium metrics are not auto-scraped by Prometheus. After
+kube-prometheus-stack is installed in Day 8, flip
+`serviceMonitor.enabled: true` back and run `helm upgrade cilium`.
+
+### Why Option A is recommended
+
+- Day 8 (Observability) installs kube-prometheus-stack → the
+  ServiceMonitor CRD will genuinely be needed then.
+- Installing the CRD now means Cilium metrics (network flows, drops, DNS
+  queries) start flowing to Prometheus immediately.
+- Setting `trustCRDsExist: true` now and installing the CRD in Day 8 does
+  **not** work — the CRD must exist at the time of `helm install`.
+
+### Enterprise prevention
+
+- Platform teams should install CRDs during **infrastructure bootstrap** —
+  before any Helm chart that depends on them.
+- Keep `serviceMonitor.enabled` as a feature flag in Helm charts and toggle
+  it based on observability-stack availability.
+- Run `helm template --validate` in CI to catch unknown kinds before
+  reaching the API server.
+- GitOps (Argo CD): use `syncOptions: [ServerSideApply=true]` to bypass CRD
+  size limits.
+
+### Verification
+
+| Check | Command | Expected |
+|---|---|---|
+| ServiceMonitor CRD | `kubectl get crd servicemonitors.monitoring.coreos.com` | Present |
+| Cilium release | `helm status cilium -n kube-system` | STATUS: deployed |
+| Cilium pods | `kubectl get pods -n kube-system -l k8s-app=cilium` | Running (1 daemonset per node) |
+| Cilium status | `kubectl exec -n kube-system ds/cilium -- cilium status --brief` | OK |
+| ServiceMonitor resource | `kubectl get servicemonitor -n kube-system` | `cilium-agent` present |
+
+### Key learnings
+
+- `trustCRDsExist` only bypasses Helm **template-time** validation, not
+  **server-side** validation.
+- CRDs must be installed **before** the Helm release that needs them —
+  dependency order matters.
+- `kubectl apply --server-side` should be the default for large CRDs
+  (especially Prometheus Operator's).
+- In chaining mode (aws-cni), do not delete `aws-node` — Cilium's policy
+  layer sits on top of it.
