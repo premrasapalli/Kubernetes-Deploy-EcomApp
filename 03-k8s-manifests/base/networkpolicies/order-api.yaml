@@ -1,0 +1,48 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# order-api: Gateway + health + nettest ingress; egress PostgreSQL 5432 + DNS.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: order-api
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: order-api
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8083"
+              protocol: TCP
+          rules:
+            http:
+              - method: GET
+                path: "^/api/orders.*$"
+              - method: POST
+                path: "^/api/orders.*$"
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "8083"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: nettest
+      toPorts:
+        - ports:
+            - port: "8083"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP

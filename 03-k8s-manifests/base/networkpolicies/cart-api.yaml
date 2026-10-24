@@ -1,0 +1,50 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# cart-api: Gateway + health + nettest ingress; egress Redis 6379 + DNS.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cart-api
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: cart-api
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+          rules:
+            http:
+              - method: GET
+                path: "^/api/cart.*$"
+              - method: POST
+                path: "^/api/cart.*$"
+              - method: DELETE
+                path: "^/api/cart.*$"
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: nettest
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

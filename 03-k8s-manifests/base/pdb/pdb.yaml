@@ -1,0 +1,48 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# PodDisruptionBudget: voluntary disruption (node drain/upgrade) సమయంలో కనీసం
+# ఎన్ని పాడ్‌లు అందుబాటులో ఉండాలి. frontend minAvailable 2 → 3లో 2 నడుస్తాయి.
+# APIs minAvailable 1. DB single replica కాబట్టి PDB ఇవ్వము (drain బ్లాక్ అవుతుంది).
+# ─────────────────────────────────────────────────────────────
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend
+  namespace: retailx
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: frontend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: product-api
+  namespace: retailx
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: product-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cart-api
+  namespace: retailx
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cart-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-api
+  namespace: retailx
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: order-api

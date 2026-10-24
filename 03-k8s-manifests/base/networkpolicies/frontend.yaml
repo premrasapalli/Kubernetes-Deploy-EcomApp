@@ -1,0 +1,54 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# frontend ingress:
+# 1) Cilium Gateway (reserved:ingress identity) నుండి 8080, L7 GET మాత్రమే.
+#    ఇది లేకపోతే Envoy fail-closed → 403.
+# 2) health entity → kubelet probes.
+# 3) nettest → debug/direct tests (L7 same allow-list).
+# Egress అవసరం లేదు (browser నేరుగా APIs కి వెళ్తుంది); DNS మాత్రమే allow-dns ద్వారా.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: frontend-l7
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: frontend
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+          rules:
+            http:
+              - method: GET
+                path: "^/$"
+              - method: GET
+                path: "^/index\\.html$"
+              - method: GET
+                path: "^/app\\.js$"
+              - method: GET
+                path: "^/styles\\.css$"
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: nettest
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+          rules:
+            http:
+              - method: GET
+                path: "^/$"
+              - method: GET
+                path: "^/index\\.html$"

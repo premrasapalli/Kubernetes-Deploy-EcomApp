@@ -1,0 +1,37 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# Zero-trust ప్రాతిపదిక: namespace లోని అన్ని పాడ్‌లకు ingress + egress default deny.
+# endpointSelector: {} → namespace లోని అన్ని endpoints. ఆ తర్వాత వచ్చే allow policies
+# మాత్రమే ట్రాఫిక్ అనుమతిస్తాయి.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny
+  namespace: retailx
+spec:
+  endpointSelector: {}
+  ingress: []
+  egress: []
+---
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# DNS మాత్రమే అన్ని పాడ్‌లకు అనుమతి (kube-dns :53 UDP/TCP).
+# DNS లేకుండా సర్వీస్ పేర్లు resolve అవ్వవు.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: retailx
+spec:
+  endpointSelector: {}
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP

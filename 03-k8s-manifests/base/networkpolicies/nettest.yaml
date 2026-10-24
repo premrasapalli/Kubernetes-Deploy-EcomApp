@@ -1,0 +1,54 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# nettest egress:
+# 1) Gateway VIP 10.0.11.250:80 (బాహ్య క్లయింట్ లాగా).
+# 2) ప్రతి service కి నేరుగా (Gateway bypass చేసి) debug చేయడానికి.
+# DNS అన్ని పాడ్‌లకు allow-dns ద్వారా ఇప్పటికే ఉంది.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: nettest-egress
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: nettest
+  egress:
+    - toCIDR:
+        - 10.0.11.250/32
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: frontend
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: product-api
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: cart-api
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: order-api
+      toPorts:
+        - ports:
+            - port: "8083"
+              protocol: TCP

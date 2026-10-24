@@ -1,0 +1,9 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# dev overlay: ఇప్పుడు base నే వాడుతున్నాం. భవిష్యత్తులో dev/prod తేడాలు
+# (replica counts, resources, image tags) ఇక్కడ patch చేయవచ్చు.
+# ─────────────────────────────────────────────────────────────
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base

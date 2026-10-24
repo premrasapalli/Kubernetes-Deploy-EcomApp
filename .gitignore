@@ -1,0 +1,36 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# ఈ ఫైల్ Git కి ఏమి పంపకూడదో చెబుతుంది.
+# Terraform state, secrets, kubeconfig, node_modules ఎప్పుడూ commit చేయకూడదు.
+# ─────────────────────────────────────────────────────────────
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Kubernetes / local secrets
+kubeconfig
+*.kubeconfig
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# App
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

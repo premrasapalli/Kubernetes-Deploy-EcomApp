@@ -1,0 +1,19 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# ఈ ఫైల్ కాపీ చేసి terraform.tfvars గా పెట్టుకోండి (అది Git లో commit అవ్వదు).
+# డిఫాల్ట్‌లు ల్యాబ్ కి సరిపోతాయి; prod లో public access CIDR తప్పక restrict చేయండి.
+# ─────────────────────────────────────────────────────────────
+project     = "retailx"
+environment = "dev"
+region      = "us-east-1"
+
+cluster_name    = "retailx-eks"
+cluster_version = "1.36"
+
+# ఉదా: మీ ఇంటి IP మాత్రమే API ని చేరాలి
+# cluster_endpoint_public_access_cidrs = ["203.0.113.10/32"]
+
+node_instance_types = ["t3.medium", "t3a.medium"]
+node_desired_size   = 2
+node_max_size       = 3
+
+gateway_ip = "10.0.11.250"

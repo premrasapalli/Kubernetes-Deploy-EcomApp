@@ -1,0 +1,17 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# gp3 default StorageClass (EBS CSI). WaitForFirstConsumer → PVC ఉన్న AZ లోనే EBS.
+# allowVolumeExpansion → భవిష్యత్తులో PVC పెంచవచ్చు. reclaimPolicy Delete → teardown శుభ్రం.
+# ─────────────────────────────────────────────────────────────
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Delete

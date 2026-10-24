@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RetailX</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>RetailX</h1>
+      <p>Enterprise demo store on AWS EKS + Cilium Gateway API</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Products</h2>
+        <div id="products" class="grid">Loading...</div>
+      </section>
+
+      <section>
+        <h2>Cart (user: demo)</h2>
+        <pre id="cart">Loading...</pre>
+        <button id="clear-cart" type="button">Clear cart</button>
+      </section>
+
+      <section>
+        <h2>Orders</h2>
+        <pre id="orders">No orders yet</pre>
+      </section>
+
+      <p id="status" role="status"></p>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

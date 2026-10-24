@@ -1,0 +1,15 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# సీక్రెట్ కాని కాన్ఫిగ్. DB పాస్‌వర్డ్ ఇక్కడ ఉండదు — అది ExternalSecret నుండి.
+# FQDN వాడటం వల్ల namespace మారినా పనిచేస్తుంది.
+# ─────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retailx-config
+  namespace: retailx
+data:
+  DB_HOST: "postgres.retailx.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "retailx"
+  REDIS_URL: "redis://redis.retailx.svc.cluster.local:6379"
+  NODE_ENV: "production"

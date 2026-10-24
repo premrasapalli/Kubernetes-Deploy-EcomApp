@@ -1,0 +1,57 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# postgres: product-api + order-api + health మాత్రమే 5432 కి రావచ్చు.
+# redis: cart-api + health మాత్రమే 6379 కి రావచ్చు.
+# ఇది "ఎవరు ఏ డేటాబేస్ చదవాలి" అనే నియమాన్ని నెట్‌వర్క్ స్థాయిలో అమలు చేస్తుంది.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: postgres
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: postgres
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: product-api
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: order-api
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: redis
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: redis
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: cart-api
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

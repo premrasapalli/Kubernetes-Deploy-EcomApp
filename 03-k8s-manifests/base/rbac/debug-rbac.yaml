@@ -1,0 +1,30 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# nettest కి మాత్రమే read-only debug permissions (pods, logs, services, endpoints).
+# App workloads కి K8s API అనుమతి అసలు ఇవ్వము. ఇదే least privilege.
+# ─────────────────────────────────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: debug-reader
+  namespace: retailx
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nettest-debug-reader
+  namespace: retailx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: debug-reader
+subjects:
+  - kind: ServiceAccount
+    name: nettest
+    namespace: retailx

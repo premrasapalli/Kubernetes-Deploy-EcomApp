@@ -1,0 +1,46 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# HTTPRoute = app team సొంతం. ఇక్కడ L7 path routing:
+# /api/products → product-api, /api/cart → cart-api, /api/orders → order-api,
+# మిగిలినవి అన్నీ (/) → frontend. పొడవైన prefix కి ప్రాధాన్యం.
+# parentRefs ద్వారా Gateway కి attach; Gateway ను మార్చము.
+# ─────────────────────────────────────────────────────────────
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: retailx-route
+  namespace: retailx
+spec:
+  parentRefs:
+    - name: retailx-gateway
+      namespace: retailx
+  hostnames:
+    - "retailx.example.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/products
+      backendRefs:
+        - name: product-api
+          port: 8081
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/cart
+      backendRefs:
+        - name: cart-api
+          port: 8082
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/orders
+      backendRefs:
+        - name: order-api
+          port: 8083
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend
+          port: 80

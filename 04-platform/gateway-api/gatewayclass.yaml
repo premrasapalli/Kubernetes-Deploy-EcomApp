@@ -1,0 +1,10 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# GatewayClass = ఏ కంట్రోలర్ Gateway ను నిర్వహిస్తుందో చెబుతుంది. ఇది platform team సొంతం.
+# controllerName io.cilium/gateway-controller → Cilium.
+# ─────────────────────────────────────────────────────────────
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: cilium
+spec:
+  controllerName: io.cilium/gateway-controller

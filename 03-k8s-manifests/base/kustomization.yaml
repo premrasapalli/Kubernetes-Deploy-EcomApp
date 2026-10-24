@@ -1,0 +1,31 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# Kustomize base: అన్ని మానిఫెస్ట్‌లు ఒకచోట. ఇమేజ్ పేర్లలో IMAGE_PREFIX/IMAGE_TAG
+# placeholders ఉన్నాయి; deploy script వాటిని ECR URL + tag తో replace చేస్తుంది.
+# ─────────────────────────────────────────────────────────────
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespaces/namespaces.yaml
+  - rbac/serviceaccounts.yaml
+  - rbac/debug-rbac.yaml
+  - storageclass/gp3.yaml
+  - configmaps/app-config.yaml
+  - secrets-external/externalsecrets.yaml
+  - services/services.yaml
+  - workloads/frontend.yaml
+  - workloads/product-api.yaml
+  - workloads/cart-api.yaml
+  - workloads/order-api.yaml
+  - workloads/postgres.yaml
+  - workloads/redis.yaml
+  - workloads/nettest.yaml
+  - pdb/pdb.yaml
+  - hpa/hpa.yaml
+  - networkpolicies/default-deny.yaml
+  - networkpolicies/frontend.yaml
+  - networkpolicies/product-api.yaml
+  - networkpolicies/cart-api.yaml
+  - networkpolicies/order-api.yaml
+  - networkpolicies/data.yaml
+  - networkpolicies/nettest.yaml

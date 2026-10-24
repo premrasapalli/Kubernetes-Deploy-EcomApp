@@ -1,0 +1,49 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# product-api: ingress = Gateway (reserved:ingress) + health + nettest; L7 GET/POST.
+# egress = PostgreSQL 5432 + DNS (allow-dns). మిగతావన్నీ deny.
+# ─────────────────────────────────────────────────────────────
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: product-api
+  namespace: retailx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: product-api
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+          rules:
+            http:
+              - method: GET
+                path: "^/api/products.*$"
+              - method: POST
+                path: "^/api/products.*$"
+    - fromEntities:
+        - health
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: nettest
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: retailx
+            app: postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP

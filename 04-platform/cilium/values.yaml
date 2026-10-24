@@ -1,0 +1,42 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# Cilium Helm values. kubeProxyReplacement=true తప్పనిసరి (Gateway API కోసం).
+# ipam.mode=cluster-pool → Cilium operator నే pod CIDR లను allocate చేస్తుంది.
+# EKS node లకు podCIDR ఇవ్వదు (VPC CNI లేకపోతే), కాబట్టి kubernetes IPAM పనిచేయదు
+# (Issue #5 చూడండి). routingMode=tunnel → VXLAN overlay.
+# k8sServiceHost/Port స్క్రిప్ట్ ద్వారా --set చేస్తాం (క్లస్టర్ ఎండ్‌పాయింట్).
+# ─────────────────────────────────────────────────────────────
+cluster:
+  name: retailx-eks
+
+kubeProxyReplacement: true
+
+routingMode: tunnel
+tunnelProtocol: vxlan
+
+ipam:
+  mode: cluster-pool
+  operator:
+    clusterPoolIPv4PodCIDRList:
+      - 10.244.0.0/16
+    clusterPoolIPv4MaskSize: 24
+
+gatewayAPI:
+  enabled: true
+
+l2announcements:
+  enabled: true
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+  tls:
+    enabled: false
+
+operator:
+  replicas: 1
+
+prometheus:
+  enabled: false

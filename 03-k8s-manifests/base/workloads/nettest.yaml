@@ -1,0 +1,52 @@
+# ── తెలుగు వివరణ ─────────────────────────────────────────────
+# nettest = curl డీబగ్ పాడ్. Gateway VIP, services, DNS పరీక్షించడానికి.
+# దీనికి మాత్రమే debug RBAC ఉంది. ఇతర app పాడ్‌లకు K8s API access లేదు.
+# ─────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nettest
+  namespace: retailx
+  labels:
+    app: nettest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nettest
+  template:
+    metadata:
+      labels:
+        app: nettest
+    spec:
+      serviceAccountName: nettest
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nettest
+          image: curlimages/curl:8.10.1
+          imagePullPolicy: IfNotPresent
+          command: ["sleep", "infinity"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
